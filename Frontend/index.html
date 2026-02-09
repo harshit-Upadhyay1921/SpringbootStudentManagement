@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Student Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:,">
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+
+<div class="max-w-6xl mx-auto bg-white shadow-md rounded p-6">
+
+    <h1 class="text-2xl font-bold text-center mb-6">
+        Student Management System
+    </h1>
+
+    <!-- ADD STUDENT -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <input id="name" class="border p-2 rounded" placeholder="Name">
+        <input id="email" class="border p-2 rounded" placeholder="Email">
+        <input id="age" type="number" class="border p-2 rounded" placeholder="Age">
+        <button onclick="addStudent()"
+            class="bg-green-600 text-white rounded hover:bg-green-700">
+            Add Student
+        </button>
+    </div>
+
+    <button onclick="loadStudents()"
+        class="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Load Students
+    </button>
+
+    <!-- TABLE -->
+    <table class="w-full border border-gray-300 text-center">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="border p-2">ID</th>
+                <th class="border p-2">Name</th>
+                <th class="border p-2">Email</th>
+                <th class="border p-2">Age</th>
+                <th class="border p-2">Action</th>
+            </tr>
+        </thead>
+        <tbody id="studentTable"></tbody>
+    </table>
+
+</div>
+
+<!-- PATCH MODAL -->
+<div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+    <div class="bg-white p-6 rounded shadow-lg w-96">
+        <h2 class="text-xl font-bold mb-4 text-center">Update Student</h2>
+
+        <input type="hidden" id="updateId">
+
+        <select id="field" class="border p-2 w-full mb-3">
+            <option value="name">Name</option>
+            <option value="email">Email</option>
+            <option value="age">Age</option>
+        </select>
+
+        <input id="newValue" class="border p-2 w-full mb-4" placeholder="New Value">
+
+        <div class="flex justify-between">
+            <button onclick="submitPatch()"
+                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                Update
+            </button>
+            <button onclick="closeModal()"
+                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = "http://localhost:8080";
+
+    function loadStudents() {
+        fetch(`${BASE_URL}/get-student`)
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById("studentTable");
+                table.innerHTML = "";
+
+                data.forEach(s => {
+                    table.innerHTML += `
+                        <tr class="hover:bg-gray-100">
+                            <td class="border p-2">${s.id}</td>
+                            <td class="border p-2">${s.name}</td>
+                            <td class="border p-2">${s.email}</td>
+                            <td class="border p-2">${s.age}</td>
+                            <td class="border p-2 space-x-2">
+                                <button onclick="openModal('${s.id}')"
+                                    class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
+                                    Update
+                                </button>
+                                <button onclick="deleteStudent('${s.id}')"
+                                    class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function addStudent() {
+        fetch(`${BASE_URL}/add-student`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name.value,
+                email: email.value,
+                age: age.value
+            })
+        }).then(() => {
+            loadStudents();
+            name.value = email.value = age.value = "";
+        });
+    }
+
+    function deleteStudent(id) {
+        fetch(`${BASE_URL}/delete-student/${id}`, { method: "DELETE" })
+            .then(() => loadStudents());
+    }
+
+    function openModal(id) {
+        document.getElementById("updateId").value = id;
+        document.getElementById("updateModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+        document.getElementById("updateModal").classList.add("hidden");
+        document.getElementById("newValue").value = "";
+    }
+
+    function submitPatch() {
+        const id = document.getElementById("updateId").value;
+        const field = document.getElementById("field").value;
+        const value = document.getElementById("newValue").value;
+
+        fetch(`${BASE_URL}/update-field/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ [field]: field === "age" ? Number(value) : value })
+        }).then(() => {
+            closeModal();
+            loadStudents();
+        });
+    }
+</script>
+
+</body>
+</html>
