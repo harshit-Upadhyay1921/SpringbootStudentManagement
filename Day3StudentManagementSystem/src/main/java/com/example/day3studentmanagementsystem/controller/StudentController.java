@@ -8,7 +8,9 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
+@CrossOrigin(origins = "*")
 @RestController
 public class StudentController {
     private final StudentService service;
@@ -28,6 +30,14 @@ public class StudentController {
     public StudentResponseDto updateStudent(@PathVariable String id,@RequestBody StudentRequestDto student){
         return service.updateStudent(id,student);
     }
+    @PatchMapping("/update-field/{id}")
+    public StudentResponseDto updateStudentField(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> updates) {
+
+        return service.updateStudentField(id, updates);
+    }
+
     @DeleteMapping("/delete-student/{id}")
     public void deleteStudent(@PathVariable String id){
         service.deleteStudent(id);
